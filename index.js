@@ -8,6 +8,10 @@ dotenv.config();
 const app = express();
 const port = 3000;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -15,16 +19,13 @@ const connection = mysql.createConnection({
     database: process.env.DB_NAME
 });
 
-connection.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL database');
-});
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-
 app.post('/submit', (req, res) => {
+    
+    connection.connect((err) => {
+        if (err) throw err;
+        console.log('Connected to MySQL database');
+    });
+
     const { username, language, stdin, sourceCode } = req.body;
 
     const query = 'INSERT INTO submissions (username, language, stdin, source_code) VALUES (?, ?, ?, ?)';
@@ -35,14 +36,24 @@ app.post('/submit', (req, res) => {
         console.log(`Data inserted with ID: ${result.insertId}`);
         res.send('Data received and saved successfully!');
     });
+
+    connection.end();
 });
 
 app.get('/submissions', (req, res) => {
+    
+    connection.connect((err) => {
+        if (err) throw err;
+        console.log('Connected to MySQL database');
+    });
+
     const query = 'SELECT * FROM submissions';
     connection.query(query, (err, results) => {
         if (err) throw err;
         res.send(results);
     });
+
+    connection.end();
 });
 
 app.listen(port, () => {
