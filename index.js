@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(
     {
-        origin: ['https://frontend-takeuforward.vercel.app/', 'http://localhost:3000']
+        origin: 'https://frontend-takeuforward.vercel.app'
     }
 ));
 
