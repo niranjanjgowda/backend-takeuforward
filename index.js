@@ -14,11 +14,7 @@ const port = 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(
-    {
-        origin: ['https://frontend-takeuforward.vercel.app', 'https://backend-takeuforward.vercel.app/submissions'] 
-    }
-));
+app.use(cors());
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
