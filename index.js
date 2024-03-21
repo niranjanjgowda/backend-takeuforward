@@ -31,14 +31,15 @@ const redisClient = redis.createClient({
     }
 });
 
-redisClient.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to Redis');
-});
+redisClient.connect();
 
 connection.connect((err) => {
     if (err) throw err;
     console.log('Connected to MySQL database');
+});
+
+redisClient.on('connect', () => {
+    console.log('Connected to Redis');
 });
 
 app.get('/', (req, res) => {
@@ -109,6 +110,7 @@ app.post('/submit', async (req, res) => {
             if (err) throw err;
             console.log(`Data inserted with ID: ${result.insertId}`);
         });
+        await redisClient.del('submissions');
         res.send(getresponse.data);
 
     } catch (error) {
@@ -118,10 +120,18 @@ app.post('/submit', async (req, res) => {
 
 app.get('/submissions', async (req, res) => {
     const query = 'SELECT username, language, stdin, source_code, compilelog  FROM submissions';
-    connection.query(query, (err, results) => {
-        if (err) throw err;
-        res.send(results);
-    });
+
+    const cacheData = await redisClient.get('submissions');
+    if (cacheData) {
+        res.send(JSON.parse(cacheData));
+    }
+    else {
+        connection.query(query, (err, results) => {
+            if (err) throw err;
+            redisClient.set('submissions', JSON.stringify(results));
+            res.send(results);
+        });
+    }
 });
 
 app.listen(port, () => {
